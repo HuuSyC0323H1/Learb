@@ -1,4 +1,4 @@
-package com.core.model;
+package com.core.infrastructure.constant;
 
 import jakarta.persistence.*;
 import lombok.Data;

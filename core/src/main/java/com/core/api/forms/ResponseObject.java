@@ -16,14 +16,13 @@ public class ResponseObject {
     private String requestId;
     private String status = "fail";
 
-    public ResponseObject() {
-
+    public <T> ResponseObject(T obj) {
+        processReponseObject(obj);
     }
 
-    public <T> ResponseObject(T obj) {
+    public void processReponseObject(Object obj) {
         if (obj != null) {
             this.isSuccess = true;
-            this.status = "success";
             this.data = obj;
             this.errorCode = ErrorCode.SUCCESS.toString();
         }
@@ -35,4 +34,16 @@ public class ResponseObject {
         this.isSuccess = isSuccess;
     }
 
+    public ResponseObject(boolean isSuccess, Object data, String errorCode, String message, String requestId) {
+        super();
+        this.isSuccess = isSuccess;
+        this.data = data;
+        this.errorCode = errorCode;
+        this.message = message;
+        this.requestId = requestId;
+    }
+
+    public ResponseObject() {
+
+    }
 }

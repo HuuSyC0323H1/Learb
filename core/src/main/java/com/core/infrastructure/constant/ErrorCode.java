@@ -11,5 +11,8 @@ public enum ErrorCode implements Serializable {
     ERRORS,
     SUCCESS,
     CHECKSUM_INVALID,
-    TOKEN_INVALID
+    TOKEN_INVALID,
+    EMAIL_HAS_BEEN_CREATED,
+    USER_REGISTERED,
+    USERNAME_OR_PASSWORD_INVALID,
 }
