@@ -1,6 +1,6 @@
 package com.core.repositories;
 
-import com.core.model.MessageTemplate;
+import com.core.infrastructure.constant.MessageTemplate;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;

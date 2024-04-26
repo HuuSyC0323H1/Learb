@@ -1,4 +1,4 @@
-package com.core;
+package com.core.utils;
 
 import com.core.api.forms.ResponseObject;
 import com.core.infrastructure.constant.ErrorCode;
