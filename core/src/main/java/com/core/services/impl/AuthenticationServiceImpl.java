@@ -15,13 +15,17 @@ import com.core.services.JwtService;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
 import java.util.Optional;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * @author: Huu Sy
@@ -46,10 +50,19 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     private final ModelMapper modelMapper = new ModelMapper();
 
+    @Value(value = "${regex}")
+    private String PASSWORD_PATTERN;
+
     public User signup(RequestSignUp requestSignUp){
+        if (!isValid(requestSignUp.getPassword())){
+            throw new NVException(ErrorCode.PASSWORD_INVALID_FORMAT);
+        }
+        if (requestSignUp.getPassword().equals(requestSignUp.getConfirmPassword())){
+            throw new NVException(ErrorCode.DUPLICATE_PASSWORD);
+        }
         User userNew = new User();
         Optional<User> user = userRepository.findByUserName(requestSignUp.getUserName());
-        if (!user.isEmpty()) throw new NVException(ErrorCode.USER_REGISTERED);
+        if (user.isPresent()) throw new NVException(ErrorCode.USER_REGISTERED);
         userNew.setFullName(requestSignUp.getFullName());
         userNew.setUserName(requestSignUp.getUserName());
         userNew.setPassword(passwordEncoder.encode(requestSignUp.getPassword()));
@@ -60,18 +73,21 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     @Override
     public AuthenticationResponse signIn(RequestSignIn requestSignIn){
-        authen.authenticate(new UsernamePasswordAuthenticationToken(
-                requestSignIn.getUserName(), requestSignIn.getPassword()));
+        if (!isValid(requestSignIn.getPassword())){
+            throw new NVException(ErrorCode.PASSWORD_INVALID_FORMAT);
+        }
+        try {
+            authen.authenticate(new UsernamePasswordAuthenticationToken(
+                    requestSignIn.getUserName(), requestSignIn.getPassword()));
+        } catch (AuthenticationException e) {
+            throw new NVException(ErrorCode.USERNAME_OR_PASSWORD_INVALID);
+        }
         User user = userRepository.getUserByUserName(requestSignIn.getUserName());
-        if (user == null) throw new NVException(ErrorCode.USERNAME_OR_PASSWORD_INVALID);
         String jwt = jwtService.generateToken(user);
-        String checksum = jwtService.generateChecksum(jwt);
-        String refreshToken = jwtService.generateRefreshToken(new HashMap<>(), user);
         AuthenticationResponse authenticationResponse = new AuthenticationResponse();
         UserResponse userResponse = modelMapper.map(user, UserResponse.class);
         authenticationResponse.setUser(userResponse);
         authenticationResponse.setToken(jwt);
-        authenticationResponse.setRefreshToken(refreshToken);
         return authenticationResponse;
     }
 
@@ -86,9 +102,14 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             UserResponse userResponse = modelMapper.map(user, UserResponse.class);
             authenticationResponse.setUser(userResponse);
             authenticationResponse.setToken(jwt);
-            authenticationResponse.setRefreshToken(refreshTokenRequest.getToken());
             return authenticationResponse;
         }
         return null;
+    }
+
+    private boolean isValid(final String password) {
+        Pattern pattern = Pattern.compile(PASSWORD_PATTERN);
+        Matcher matcher = pattern.matcher(password);
+        return matcher.matches();
     }
 }

@@ -15,4 +15,7 @@ public enum ErrorCode implements Serializable {
     EMAIL_HAS_BEEN_CREATED,
     USER_REGISTERED,
     USERNAME_OR_PASSWORD_INVALID,
+    PASSWORD_INVALID_FORMAT,
+    DUPLICATE_PASSWORD,
+
 }

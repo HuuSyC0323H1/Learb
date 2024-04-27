@@ -13,7 +13,7 @@ import java.util.Objects;
 public interface JwtService {
     String extractUserName(String token);
     String generateToken(UserDetails userDetails);
-    String generateChecksum(String token);
+    String generateChecksum(String data, String key);
     boolean isTokenValid(String token, UserDetails userDetails);
     String generateRefreshToken(Map<String, Objects> extractClaims, UserDetails userDetails);
 }

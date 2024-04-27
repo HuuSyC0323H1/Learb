@@ -9,6 +9,8 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
@@ -25,43 +27,42 @@ import java.util.function.Function;
  */
 
 @Service
+@Slf4j
 public class JwtServiceImpl implements JwtService {
 
+    @Value("${secretKey}")
+    private String secretKey;
+
+    @Value("${key}")
+    private String key;
 
     @Override
     public String generateToken(UserDetails userDetails){
-        String token = Jwts.builder()
-                .setSubject(userDetails.getUsername())
+        return Jwts.builder().setSubject(userDetails.getUsername())
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 24))
                 .signWith(getSignKey(), SignatureAlgorithm.HS256)
                 .compact();
-
-        String checksum = generateChecksum(token);
-
-        Claims claims = Jwts.claims().setSubject(token);
-        claims.put("checksum", checksum);
-
-        return Jwts.builder()
-                .setClaims(claims)
-                .signWith(getSignKey(), SignatureAlgorithm.HS256)
-                .compact();
-//        return Jwts.builder().setSubject(userDetails.getUsername())
-//                .setIssuedAt(new Date(System.currentTimeMillis()))
-//                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 24))
-//                .signWith(getSignKey(), SignatureAlgorithm.HS256)
-//                .compact();
     }
 
     @Override
-    public String generateChecksum(String token) {
+    public String generateChecksum(String data, String key) {
+        String checkSum = "";
         try {
-            MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            byte[] hashBytes = digest.digest(token.getBytes(StandardCharsets.UTF_8));
-            return Base64.getEncoder().encodeToString(hashBytes);
+            String keys = data + key;
+            MessageDigest md = MessageDigest.getInstance("MD5");
+            byte[] hashInBytes = md.digest(keys.getBytes(StandardCharsets.UTF_8));
+
+            StringBuilder sb = new StringBuilder();
+            for (byte b : hashInBytes) {
+                sb.append(String.format("%02x", b));
+            }
+            checkSum = sb.toString();
         } catch (Exception e) {
-            throw new NVException(ErrorCode.CHECKSUM_INVALID);
+           throw new NVException(e.getMessage());
         }
+        log.info("Checksum: " + checkSum);
+        return checkSum;
     }
 
     public String extractUserName(String token){
@@ -79,7 +80,7 @@ public class JwtServiceImpl implements JwtService {
     }
 
     private Key getSignKey(){
-        byte[] key = Decoders.BASE64.decode("4234F324352409S342349293A5435FH453423423E3453454W465721");
+        byte[] key = Decoders.BASE64.decode(secretKey);
         return Keys.hmacShaKeyFor(key);
     }
 
@@ -101,3 +102,19 @@ public class JwtServiceImpl implements JwtService {
                 .compact();
     }
 }
+//        String token = Jwts.builder()
+//                .setSubject(userDetails.getUsername())
+//                .setIssuedAt(new Date(System.currentTimeMillis()))
+//                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 24))
+//                .signWith(getSignKey(), SignatureAlgorithm.HS256)
+//                .compact();
+//
+//        String checksum = generateChecksum(token);
+//
+//        Claims claims = Jwts.claims().setSubject(token);
+//        claims.put("checksum", checksum);
+//
+//        return Jwts.builder()
+//                .setClaims(claims)
+//                .signWith(getSignKey(), SignatureAlgorithm.HS256)
+//                .compact();
