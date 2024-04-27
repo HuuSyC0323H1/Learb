@@ -1,8 +1,6 @@
 package com.core.services.impl;
 
-import com.core.infrastructure.constant.ErrorCode;
 import com.core.infrastructure.exception.NVException;
-import com.core.model.User;
 import com.core.services.JwtService;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
@@ -17,7 +15,6 @@ import org.springframework.stereotype.Service;
 import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.*;
 import java.util.function.Function;
 
@@ -66,17 +63,23 @@ public class JwtServiceImpl implements JwtService {
     }
 
     public String extractUserName(String token){
-        return extractClaim(token, Claims::getAudience);
+        Claims claims = Jwts.parser()
+                .setSigningKey(getSignKey())
+                .parseClaimsJws(token)
+                .getBody();
+        return claims.getSubject();
     }
 
     private<T> T extractClaim(String token, Function<Claims, T> claimsTFunction){
-        final Claims claims = extractAllClaim(token);
+        Claims claims = extractAllClaim(token);
         return claimsTFunction.apply(claims);
     }
 
     private Claims extractAllClaim(String token) {
-
-        return Jwts.parserBuilder().setSigningKey(getSignKey()).build().parseClaimsJwt(token).getBody();
+        return Jwts.parser()
+                .setSigningKey(secretKey)
+                .parseClaimsJws(token)
+                .getBody();
     }
 
     private Key getSignKey(){
@@ -85,7 +88,7 @@ public class JwtServiceImpl implements JwtService {
     }
 
     public boolean isTokenValid(String token, UserDetails userDetails){
-        final String userName = extractUserName(token);
+        String userName = extractUserName(token);
         return userName.equals(userDetails.getUsername()) && !isTokenExpired(token);
     }
 

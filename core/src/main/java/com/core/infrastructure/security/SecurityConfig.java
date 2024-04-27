@@ -39,21 +39,17 @@ public class SecurityConfig {
 
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity){
-        try {
-            httpSecurity.csrf(AbstractHttpConfigurer::disable)
-                    .authorizeHttpRequests(request -> request.requestMatchers("/api/v1/user/**")
-                            .permitAll()
-                            .requestMatchers("/api/v1/sys/**").hasAnyAuthority(Role.ADMIN.name())
-                            .requestMatchers("/api/v1/app/**").hasAnyAuthority(Role.USER.name()))
-                    .sessionManagement(manager -> manager.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                    .authenticationProvider(authenticationProvider()).addFilterBefore(
-                            jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class
-                    );
-            return httpSecurity.build();
-        } catch (Exception e) {
-            throw new NVException(e.getMessage());
-        }
+    public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception{
+        httpSecurity.csrf(AbstractHttpConfigurer::disable)
+                .authorizeHttpRequests(request -> request.requestMatchers("/api/v1/user/**")
+                        .permitAll()
+                        .requestMatchers("/api/v1/sys/**").hasAnyAuthority(Role.ADMIN.name())
+                        .requestMatchers("/api/v1/app/**").hasAnyAuthority(Role.USER.name()))
+                .sessionManagement(manager -> manager.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authenticationProvider(authenticationProvider()).addFilterBefore(
+                        jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class
+                );
+        return httpSecurity.build();
     }
 
     @Bean
