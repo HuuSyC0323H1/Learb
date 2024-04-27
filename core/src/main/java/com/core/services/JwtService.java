@@ -11,12 +11,9 @@ import java.util.Objects;
  */
 
 public interface JwtService {
-
     String extractUserName(String token);
-
     String generateToken(UserDetails userDetails);
-
+    String generateChecksum(String token);
     boolean isTokenValid(String token, UserDetails userDetails);
-
     String generateRefreshToken(Map<String, Objects> extractClaims, UserDetails userDetails);
 }

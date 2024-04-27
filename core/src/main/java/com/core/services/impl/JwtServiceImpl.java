@@ -1,5 +1,7 @@
 package com.core.services.impl;
 
+import com.core.infrastructure.constant.ErrorCode;
+import com.core.infrastructure.exception.NVException;
 import com.core.model.User;
 import com.core.services.JwtService;
 import io.jsonwebtoken.Claims;
@@ -10,7 +12,10 @@ import io.jsonwebtoken.security.Keys;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
+import java.nio.charset.StandardCharsets;
 import java.security.Key;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.*;
 import java.util.function.Function;
 
@@ -25,11 +30,38 @@ public class JwtServiceImpl implements JwtService {
 
     @Override
     public String generateToken(UserDetails userDetails){
-        return Jwts.builder().setSubject(userDetails.getUsername())
+        String token = Jwts.builder()
+                .setSubject(userDetails.getUsername())
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 24))
                 .signWith(getSignKey(), SignatureAlgorithm.HS256)
                 .compact();
+
+        String checksum = generateChecksum(token);
+
+        Claims claims = Jwts.claims().setSubject(token);
+        claims.put("checksum", checksum);
+
+        return Jwts.builder()
+                .setClaims(claims)
+                .signWith(getSignKey(), SignatureAlgorithm.HS256)
+                .compact();
+//        return Jwts.builder().setSubject(userDetails.getUsername())
+//                .setIssuedAt(new Date(System.currentTimeMillis()))
+//                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 24))
+//                .signWith(getSignKey(), SignatureAlgorithm.HS256)
+//                .compact();
+    }
+
+    @Override
+    public String generateChecksum(String token) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hashBytes = digest.digest(token.getBytes(StandardCharsets.UTF_8));
+            return Base64.getEncoder().encodeToString(hashBytes);
+        } catch (Exception e) {
+            throw new NVException(ErrorCode.CHECKSUM_INVALID);
+        }
     }
 
     public String extractUserName(String token){

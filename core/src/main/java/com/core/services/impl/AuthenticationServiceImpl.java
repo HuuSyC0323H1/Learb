@@ -65,6 +65,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         User user = userRepository.getUserByUserName(requestSignIn.getUserName());
         if (user == null) throw new NVException(ErrorCode.USERNAME_OR_PASSWORD_INVALID);
         String jwt = jwtService.generateToken(user);
+        String checksum = jwtService.generateChecksum(jwt);
         String refreshToken = jwtService.generateRefreshToken(new HashMap<>(), user);
         AuthenticationResponse authenticationResponse = new AuthenticationResponse();
         UserResponse userResponse = modelMapper.map(user, UserResponse.class);
