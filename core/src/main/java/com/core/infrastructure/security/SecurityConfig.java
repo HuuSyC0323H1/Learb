@@ -41,10 +41,10 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception{
         httpSecurity.csrf(AbstractHttpConfigurer::disable)
-                .authorizeHttpRequests(request -> request.requestMatchers("/api/v1/user/**")
+                .authorizeHttpRequests(request -> request.requestMatchers("/api/app/**", "/api/user/signing", "/api/user/signup")
                         .permitAll()
-                        .requestMatchers("/api/v1/sys/**").hasAnyAuthority(Role.ADMIN.name())
-                        .requestMatchers("/api/v1/app/**").hasAnyAuthority(Role.USER.name()))
+                        .requestMatchers("/api/sys/**").hasAnyAuthority(Role.ADMIN.name())
+                        .requestMatchers("/api/user/**").hasAnyAuthority(Role.USER.name()))
                 .sessionManagement(manager -> manager.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authenticationProvider(authenticationProvider()).addFilterBefore(
                         jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class
