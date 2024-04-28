@@ -4,6 +4,8 @@ import lombok.Data;
 
 @Data
 public class FilterRequest {
+    private String name;
+    private String langCode;
     private Long categoryId;
     private Long provinceId;
     private Long partnerId;
