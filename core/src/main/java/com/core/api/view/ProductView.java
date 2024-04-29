@@ -1,5 +1,6 @@
 package com.core.api.view;
 
+import com.core.model.Level;
 import lombok.Data;
 
 @Data
@@ -12,7 +13,7 @@ public class ProductView {
 
     private Long quantitySold;
 
-    private Long levelId;
+    private Level level;
 
-    private Long provinceId;
+    private ProvinceView provinceView;
 }
