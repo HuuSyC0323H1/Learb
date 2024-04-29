@@ -17,5 +17,5 @@ public enum ErrorCode implements Serializable {
     USERNAME_OR_PASSWORD_INVALID,
     PASSWORD_INVALID_FORMAT,
     DUPLICATE_PASSWORD,
-
+    PRODUCT_DOES_NOT_EXIT,
 }

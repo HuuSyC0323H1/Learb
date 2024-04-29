@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
  * @Date: 27/04/2024 4:18 CH
  */
 @RestController
-@RequestMapping("/api/v1/sys")
+@RequestMapping("/api/sys")
 @RequiredArgsConstructor
 public class AbcController {
 

@@ -34,6 +34,8 @@ public class Products {
 
     private String  policy;
 
+    private Long conditionId;
+
     private Long levelId;
 
     private Long userId;
