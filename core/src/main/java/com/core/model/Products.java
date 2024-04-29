@@ -32,8 +32,6 @@ public class Products {
 
     private Long quantityTotal;
 
-    private String  policy;
-
     private Long conditionId;
 
     private Long levelId;

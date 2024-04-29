@@ -9,6 +9,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AuthorizationServiceException;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -38,10 +40,24 @@ public class WebRestControllerAdvice {
         return new ResponseEntity(result, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
-    @ExceptionHandler()
-    public ResponseEntity<ResponseObject> AuthenticationExceptionHandle(Exception ex) {
+    @ExceptionHandler(AuthenticationException.class)
+    public ResponseEntity<ResponseObject> handleAuthenticationException(AuthenticationException ex) {
         ResponseObject result = new ResponseObject();
-        result.setErrorCode(ex.getMessage());
-        return new ResponseEntity(result, HttpStatus.UNAUTHORIZED);
+        result.setMessage(ex.getMessage());
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(result);
+    }
+
+    @ExceptionHandler(AuthorizationServiceException.class)
+    public ResponseEntity<ResponseObject> handleAuthorizationException(AuthorizationServiceException ex) {
+        ResponseObject result = new ResponseObject();
+        result.setMessage(ex.getMessage());
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(result);
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ResponseObject> handleGenericException(Exception ex) {
+        ResponseObject result = new ResponseObject();
+        result.setMessage(ex.getMessage());
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(result);
     }
 }
