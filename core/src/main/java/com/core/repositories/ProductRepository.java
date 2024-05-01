@@ -12,12 +12,12 @@ import java.util.List;
 @Repository
 public interface ProductRepository extends JpaRepository<Products, Long> {
 
-    @Query(value = "select * from products p ",nativeQuery = true)
-    Page<Products> getListProduct(String name, String langCode, Pageable pageable);
+    @Query(value = "select * from products p where (p.name like concat('%' ,:name, '%') OR :name IS NULL OR :name LIKE '')",nativeQuery = true)
+    Page<Products> getListProduct(String name, Pageable pageable);
 
     @Query(value = "select p.* from products p",nativeQuery = true)
     List<Products> getProductsList(String name);
 
-    @Query(value = "select p.* from products p",nativeQuery = true)
+    @Query(value = "select p.* from products p where p.id = :id",nativeQuery = true)
     Products findAllById(Long id);
 }

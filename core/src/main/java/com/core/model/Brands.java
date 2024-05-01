@@ -5,16 +5,16 @@ import lombok.Data;
 
 /**
  * @author: Huu Sy
- * @Date: 29/04/2024 7:39 CH
+ * @Date: 30/04/2024 4:18 CH
  */
 
 @Data
 @Entity
-@Table(name = "policy")
-public class Policy {
+@Table(name = "brands")
+public class Brands {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
     private String name;
 }

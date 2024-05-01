@@ -1,6 +1,6 @@
 package com.core.api.view;
 
-import com.core.model.Level;
+import com.core.model.*;
 import lombok.Data;
 
 @Data
@@ -11,9 +11,13 @@ public class ProductView {
 
     private Double price;
 
+    private Double rating;
+
+    private String image;
+
     private Long quantitySold;
 
     private Level level;
 
-    private ProvinceView provinceView;
+    private ProvinceView province;
 }

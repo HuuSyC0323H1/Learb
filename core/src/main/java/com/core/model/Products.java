@@ -44,8 +44,11 @@ public class Products {
 
     private String warrantyPeriod;
 
-    private String style;
+    private Long styleId;
 
     private Long provinceId;
 
+    private Long policyId;
+
+    private Long trademarkId;
 }

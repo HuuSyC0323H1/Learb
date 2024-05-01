@@ -1,17 +1,11 @@
 package com.core.services.impl;
 
 import com.core.api.forms.FilterRequest;
-import com.core.api.view.ProductCategoryView;
-import com.core.api.view.ProductFilterView;
-import com.core.api.view.ProductView;
-import com.core.api.view.ProvinceView;
+import com.core.api.view.*;
 import com.core.infrastructure.constant.ErrorCode;
 import com.core.infrastructure.constant.LanguageCode;
 import com.core.infrastructure.exception.NVException;
-import com.core.model.Category;
-import com.core.model.Level;
-import com.core.model.Policy;
-import com.core.model.Products;
+import com.core.model.*;
 import com.core.repositories.*;
 import com.core.services.ProductService;
 import org.modelmapper.ModelMapper;
@@ -43,17 +37,39 @@ public class ProductServiceImpl implements ProductService {
     private ProvinceRepository provinceRepository;
 
     @Autowired
-    private PolicyRepository policyRepository;
+    private ImageRepository imageRepository;
+
+    @Autowired
+    private StyleShopRepository styleShopRepository;
+
+    @Autowired
+    private TrademarkRepository trademarkRepository;
+
+    @Autowired
+    private ConditionRepository conditionRepository;
 
     private final ModelMapper modelMapper = new ModelMapper();
 
 
     @Override
-    public Page<Products> getListProduct(FilterRequest filter, Pageable pageable) {
+    public Page<ProductView> getListProduct(FilterRequest filter, Pageable pageable) {
         if (filter.getLangCode() == null){
             filter.setLangCode(LanguageCode.VI.getValue());
         }
-        return productRepository.getListProduct(filter.getName(), filter.getLangCode(), pageable);
+        Page<Products> productsList = productRepository.getListProduct(filter.getName(), pageable);
+        List<ProductView> productViews = new ArrayList<>();
+        productsList.getContent().forEach(products -> {
+            Level level = levelRepository.findLevelById(products.getLevelId());
+            ProvinceView province = provinceRepository.findProvinceById(products.getProvinceId());
+            Image image = imageRepository.findRandomImageByProductId(products.getId());
+
+            ProductView productView = modelMapper.map(products, ProductView.class);
+            productView.setLevel(level);
+            productView.setProvince(province);
+            productView.setImage(image.getLink());
+            productViews.add(productView);
+        });
+        return new PageImpl<>(productViews, pageable, productsList.getTotalElements());
     }
 
     @Override
@@ -62,14 +78,20 @@ public class ProductServiceImpl implements ProductService {
         List<Products> productsList = productRepository.getProductsList(filter.getName());
 
         if (productsList.isEmpty()) throw new NVException(ErrorCode.IS_EMPTY);
-        if (filter.getCategoryId() != null){
+
+        if (filter.getCategoryId() != null && !filter.getCategoryId().isEmpty()){
             productsList = productsList.stream().filter(productView ->
-                    productView.getCategoryId().compareTo(filter.getCategoryId()) == 0).toList();
+                    filter.getCategoryId().contains(productView.getCategoryId())).collect(Collectors.toList());
         }
 
-        if (filter.getProvinceId() != null){
+        if (filter.getProvinceId() != null && !filter.getProvinceId().isEmpty()){
             productsList = productsList.stream().filter(productView ->
-                    productView.getProvinceId().compareTo(filter.getProvinceId()) == 0).toList();
+                    filter.getProvinceId().contains(productView.getProvinceId())).collect(Collectors.toList());
+        }
+
+        if (filter.getRating() != null){
+            productsList = productsList.stream().filter(productView ->
+                    productView.getRating().equals(filter.getRating())).collect(Collectors.toList());
         }
 
         if (filter.getMinPrice() != null && filter.getMaxPrice() != null){
@@ -78,12 +100,26 @@ public class ProductServiceImpl implements ProductService {
                     .collect(Collectors.toList());
         }
 
-//        if (filter.getPolicyId() != null){
-//            productsList = productsList.stream().forEach(productView ->{
-//                Policy policy = policyRepository.findPoliciesById(filter.getPolicyId());
-//
-//            });
-//        }
+        if (filter.getPolicyId() != null && !filter.getPolicyId().isEmpty()){
+            productsList = productsList.stream().filter(productView ->
+                    filter.getPolicyId().contains(productView.getPolicyId())).collect(Collectors.toList());
+        }
+
+        if (filter.getTrademarkId() != null && !filter.getTrademarkId().isEmpty()){
+            productsList = productsList.stream().filter(productView ->
+                    filter.getTrademarkId().contains(productView.getTrademarkId())).collect(Collectors.toList());
+        }
+
+        if (filter.getStyleShop() != null && !filter.getStyleShop().isEmpty()){
+            productsList = productsList.stream().filter(productView ->
+                    filter.getStyleShop().contains(productView.getStyleId())).collect(Collectors.toList());
+        }
+
+        if (filter.getConditionId() != null && !filter.getConditionId().isEmpty()){
+            productsList = productsList.stream().filter(productView ->
+                    filter.getConditionId().contains(productView.getConditionId())).collect(Collectors.toList());
+        }
+
         List<ProductView> productViewsList = new ArrayList<>();
         Set<ProductCategoryView> productCategoryViewList = new HashSet<>();
 
@@ -91,11 +127,15 @@ public class ProductServiceImpl implements ProductService {
             ProductCategoryView productCategoryView = new ProductCategoryView();
             Category category = categoryRepository.getCategoryById(products.getCategoryId());
             productCategoryView.setName(category.getName());
+
             Level level = levelRepository.findLevelById(products.getLevelId());
             ProvinceView province = provinceRepository.findProvinceById(products.getProvinceId());
+            Image image = imageRepository.findRandomImageByProductId(products.getId());
+
             ProductView productView = modelMapper.map(products, ProductView.class);
             productView.setLevel(level);
-            productView.setProvinceView(province);
+            productView.setProvince(province);
+            productView.setImage(image.getLink());
             productCategoryViewList.add(productCategoryView);
             productViewsList.add(productView);
         });
@@ -113,11 +153,27 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public Products getDetailProduct(Long productId) {
+    public ResponseProductDetail getDetailProduct(Long productId) {
+        ResponseProductDetail productDetail = new ResponseProductDetail();
         Products products = productRepository.findAllById(productId);
-        if (products == null){
-            throw new NVException(ErrorCode.PRODUCT_DOES_NOT_EXIT);
-        }
-        return products;
+
+        ProductDetailView productDetailView = modelMapper.map(products, ProductDetailView.class);
+
+        Level level = levelRepository.findLevelById(products.getLevelId());
+        ProvinceView province = provinceRepository.findProvinceById(products.getProvinceId());
+        Image image = imageRepository.findRandomImageByProductId(products.getId());
+        StyleShop styleShop = styleShopRepository.findStyleShopById(products.getStyleId());
+        Brands brands = trademarkRepository.findBrandsById(products.getTrademarkId());
+        Condition condition = conditionRepository.findConditionById(products.getConditionId());
+
+        productDetailView.setLevel(level);
+        productDetailView.setProvince(province);
+        productDetailView.setImage(image.getLink());
+        productDetailView.setBrands(brands);
+        productDetailView.setStyleShop(styleShop);
+        productDetailView.setCondition(condition);
+
+        productDetail.setProductDetail(productDetailView);
+        return productDetail;
     }
 }
