@@ -2,18 +2,20 @@ package com.core.api.forms;
 
 import lombok.Data;
 
+import java.util.List;
+
 @Data
 public class FilterRequest {
     private String name;
     private String langCode;
-    private Long categoryId;
-    private Long provinceId;
-    private Long partnerId;
-    private Long trademarkId;
+    private List<Long> categoryId;
+    private List<Long> provinceId;
+    private List<Long> policyId;
+    private List<Long> trademarkId;
     private Double minPrice;
     private Double maxPrice;
-    private Long styleShop;
-    private Long conditionId;
-    private Long rating;
-    private Long policyId;
+    private List<Long> styleShop;
+    private List<Long> conditionId;
+    private Double rating;
+
 }

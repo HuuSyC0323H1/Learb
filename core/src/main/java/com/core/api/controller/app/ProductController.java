@@ -25,4 +25,9 @@ public class ProductController {
     public ResponseObject getPageFilter(FilterRequest filter, Pageable pageable){
         return new ResponseObject(productService.getProductFilter(filter, pageable));
     }
+
+    @GetMapping("/detail")
+    public ResponseObject getDetailProduct(Long id){
+        return new ResponseObject(productService.getDetailProduct(id));
+    }
 }
